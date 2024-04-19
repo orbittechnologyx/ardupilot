@@ -400,6 +400,18 @@ class WaitAndMaintain(object):
             text += f" (maintain={delta:.1f}/{self.minimum_duration})"
         self.progress(text)
 
+    def progress_text(self, value):
+        return f"want={self.get_target_value()} got={value}"
+
+    def validate_value(self, value):
+        return value == self.get_target_value()
+
+    def timeoutexception(self):
+        return AutoTestTimeoutException("Failed to attain or maintain value")
+
+    def success_text(self):
+        return f"{type(self)} Success"
+
 
 class WaitAndMaintainLocation(WaitAndMaintain):
     def __init__(self, test_suite, target, accuracy=5, height_accuracy=1, **kwargs):
@@ -451,6 +463,17 @@ class WaitAndMaintainLocation(WaitAndMaintain):
             return (f"Want=({self.target.lat:.7f},{self.target.lng:.7f},{self.target.alt:.2f}) Got=({current_value.lat:.7f},{current_value.lng:.7f},{current_value.alt:.2f}) dist={self.horizontal_error(current_value):.2f} vdist={self.vertical_error(current_value):.2f}")  # noqa
 
         return (f"Want=({self.target.lat},{self.target.lng}) distance={self.horizontal_error(current_value)}")
+
+
+class WaitAndMaintainArmed(WaitAndMaintain):
+    def get_current_value(self):
+        return self.test_suite.armed()
+
+    def get_target_value(self):
+        return True
+
+    def announce_start_text(self):
+        return "Ensuring vehicle remains armed"
 
 
 class MSP_Generic(Telem):
@@ -3972,7 +3995,11 @@ class TestSuite(ABC):
                 seq += 1
                 ret.append(item)
                 continue
-            (t, n, e, alt) = item
+            opts = {}
+            try:
+                (t, n, e, alt, opts) = item
+            except ValueError:
+                (t, n, e, alt) = item
             lat = 0
             lng = 0
             if n != 0 or e != 0:
@@ -3982,6 +4009,8 @@ class TestSuite(ABC):
             frame = mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT
             if not self.ardupilot_stores_frame_for_cmd(t):
                 frame = mavutil.mavlink.MAV_FRAME_GLOBAL
+            if opts.get('frame', None) is not None:
+                frame = opts.get('frame')
             ret.append(self.create_MISSION_ITEM_INT(t, seq=seq, frame=frame, x=int(lat*1e7), y=int(lng*1e7), z=alt))
             seq += 1
 
@@ -4371,7 +4400,7 @@ class TestSuite(ABC):
         """Download latest log over network port"""
         self.context_push()
         self.set_parameters({
-            "NET_ENABLED": 1,
+            "NET_ENABLE": 1,
             "LOG_DISARMED": 0,
             "LOG_DARM_RATEMAX": 1, # make small logs
             # UDP client
@@ -5412,9 +5441,9 @@ class TestSuite(ABC):
         )
 
     def armed(self):
-        """Return true if vehicle is armed and safetyoff"""
-        self.wait_heartbeat()
-        return self.mav.motors_armed()
+        """Return True if vehicle is armed and safetyoff"""
+        m = self.wait_heartbeat()
+        return (m.base_mode & mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED) != 0
 
     def send_mavlink_arm_command(self):
         self.send_cmd(
@@ -8970,6 +8999,15 @@ Also, ignores heartbeats not from our target system'''
             self.progress("GroundSpeed OK (got=%f) (want=%f)" %
                           (m.groundspeed, want))
 
+    def set_home(self, loc):
+        '''set home to supplied loc'''
+        self.run_cmd_int(
+            mavutil.mavlink.MAV_CMD_DO_SET_HOME,
+            p5=int(loc.lat*1e7),
+            p6=int(loc.lng*1e7),
+            p7=loc.alt,
+        )
+
     def SetHome(self):
         '''Setting and fetching of home'''
         if self.is_tracker():
@@ -12062,7 +12100,7 @@ switch value'''
     def NMEAOutput(self):
         '''Test AHRS NMEA Output can be read by out NMEA GPS'''
         self.set_parameter("SERIAL5_PROTOCOL", 20) # serial5 is NMEA output
-        self.set_parameter("GPS_TYPE2", 5) # GPS2 is NMEA
+        self.set_parameter("GPS2_TYPE", 5) # GPS2 is NMEA
         port = self.spare_network_port()
         self.customise_SITL_commandline([
             "--serial4=tcp:%u" % port, # GPS2 is NMEA....
@@ -13633,7 +13671,7 @@ switch value'''
             self.set_parameter("SERIAL3_PROTOCOL", serial_protocol)
             if gps_type is None:
                 gps_type = 1  # auto-detect
-            self.set_parameter("GPS_TYPE", gps_type)
+            self.set_parameter("GPS1_TYPE", gps_type)
             self.context_clear_collection('STATUSTEXT')
             self.reboot_sitl()
             if detect_prefix == "probing":
@@ -13644,7 +13682,7 @@ switch value'''
             n = self.poll_home_position(timeout=120)
             distance = self.get_distance_int(orig, n)
             if distance > 1:
-                raise NotAchievedException("gps type %u misbehaving" % name)
+                raise NotAchievedException(f"gps type {name} misbehaving")
 
     def assert_gps_satellite_count(self, messagename, count):
         m = self.assert_receive_message(messagename)
@@ -13652,14 +13690,78 @@ switch value'''
             raise NotAchievedException("Expected %u sats, got %u" %
                                        (count, m.satellites_visible))
 
+    def check_attitudes_match(self):
+        '''make sure ahrs2 and simstate and ATTTIUDE_QUATERNION all match'''
+
+        # these are ordered to bookend the list with timestamps (which
+        # both attitude messages have):
+        get_names = ['ATTITUDE', 'SIMSTATE', 'AHRS2', 'ATTITUDE_QUATERNION']
+        msgs = self.get_messages_frame(get_names)
+
+        for get_name in get_names:
+            self.progress("%s: %s" % (get_name, msgs[get_name]))
+
+        simstate = msgs['SIMSTATE']
+        attitude = msgs['ATTITUDE']
+        ahrs2 = msgs['AHRS2']
+        attitude_quaternion = msgs['ATTITUDE_QUATERNION']
+
+        # check ATTITUDE
+        want = math.degrees(simstate.roll)
+        got = math.degrees(attitude.roll)
+        if abs(mavextra.angle_diff(want, got)) > 20:
+            raise NotAchievedException("ATTITUDE.Roll looks bad (want=%f got=%f)" %
+                                       (want, got))
+        want = math.degrees(simstate.pitch)
+        got = math.degrees(attitude.pitch)
+        if abs(mavextra.angle_diff(want, got)) > 20:
+            raise NotAchievedException("ATTITUDE.Pitch looks bad (want=%f got=%f)" %
+                                       (want, got))
+
+        # check AHRS2
+        want = math.degrees(simstate.roll)
+        got = math.degrees(ahrs2.roll)
+        if abs(mavextra.angle_diff(want, got)) > 20:
+            raise NotAchievedException("AHRS2.Roll looks bad (want=%f got=%f)" %
+                                       (want, got))
+
+        want = math.degrees(simstate.pitch)
+        got = math.degrees(ahrs2.pitch)
+        if abs(mavextra.angle_diff(want, got)) > 20:
+            raise NotAchievedException("AHRS2.Pitch looks bad (want=%f got=%f)" %
+                                       (want, got))
+
+        # check ATTITUDE_QUATERNION
+        q = quaternion.Quaternion([
+            attitude_quaternion.q1,
+            attitude_quaternion.q2,
+            attitude_quaternion.q3,
+            attitude_quaternion.q4
+        ])
+        euler = q.euler
+        self.progress("attquat:%s q:%s euler:%s" % (
+            str(attitude_quaternion), q, euler))
+
+        want = math.degrees(simstate.roll)
+        got = math.degrees(euler[0])
+        if mavextra.angle_diff(want, got) > 20:
+            raise NotAchievedException("quat roll differs from attitude roll; want=%f got=%f" %
+                                       (want, got))
+
+        want = math.degrees(simstate.pitch)
+        got = math.degrees(euler[1])
+        if mavextra.angle_diff(want, got) > 20:
+            raise NotAchievedException("quat pitch differs from attitude pitch; want=%f got=%f" %
+                                       (want, got))
+
     def MultipleGPS(self):
         '''check ArduPilot behaviour across multiple GPS units'''
         self.assert_message_rate_hz('GPS2_RAW', 0)
 
-        # we start sending GPS_TYPE2 - but it will never actually be
+        # we start sending GPS2_TYPE - but it will never actually be
         # filled in as _port[1] is only filled in in AP_GPS::init()
         self.start_subtest("Get GPS2_RAW as soon as we're configured for a second GPS")
-        self.set_parameter("GPS_TYPE2", 1)
+        self.set_parameter("GPS2_TYPE", 1)
         self.assert_message_rate_hz('GPS2_RAW', 5)
 
         self.start_subtest("Ensure correct fix type when no connected GPS")
@@ -13671,7 +13773,7 @@ switch value'''
         self.start_subtest("Ensure detection when sim gps connected")
         self.set_parameter("SIM_GPS2_TYPE", 1)
         self.set_parameter("SIM_GPS2_DISABLE", 0)
-        # a reboot is required after setting GPS_TYPE2.  We start
+        # a reboot is required after setting GPS2_TYPE.  We start
         # sending GPS2_RAW out, once the parameter is set, but a
         # reboot is required because _port[1] is only set in
         # AP_GPS::init() at boot time, so it will never be detected.

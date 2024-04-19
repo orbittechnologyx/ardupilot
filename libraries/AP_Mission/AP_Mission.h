@@ -288,6 +288,13 @@ public:
         float focus_value;
     };
 
+    // MAV_CMD_SET_CAMERA_SOURCE support
+    struct PACKED set_camera_source_Command {
+        uint8_t instance;
+        uint8_t primary_source;
+        uint8_t secondary_source;
+    };
+
     // MAV_CMD_VIDEO_START_CAPTURE support
     struct PACKED video_start_capture_Command {
         uint8_t video_stream_id;
@@ -387,6 +394,9 @@ public:
 
         // MAV_CMD_SET_CAMERA_FOCUS support
         set_camera_focus_Command set_camera_focus;
+
+        // MAV_CMD_SET_CAMEARA_SOURCE support
+        set_camera_source_Command set_camera_source;
 
         // MAV_CMD_VIDEO_START_CAPTURE support
         video_start_capture_Command video_start_capture;
@@ -655,18 +665,24 @@ public:
     // find the nearest landing sequence starting point (DO_LAND_START) and
     // return its index.  Returns 0 if no appropriate DO_LAND_START point can
     // be found.
-    uint16_t get_landing_sequence_start();
+    uint16_t get_landing_sequence_start(const Location &current_loc);
 
     // find the nearest landing sequence starting point (DO_LAND_START) and
     // switch to that mission item.  Returns false if no DO_LAND_START
     // available.
-    bool jump_to_landing_sequence(void);
+    bool jump_to_landing_sequence(const Location &current_loc);
 
     // jumps the mission to the closest landing abort that is planned, returns false if unable to find a valid abort
+    bool jump_to_abort_landing_sequence(const Location &current_loc);
+
+    // Scripting helpers for the above functions to fill in the location
+#if AP_SCRIPTING_ENABLED
+    bool jump_to_landing_sequence(void);
     bool jump_to_abort_landing_sequence(void);
+#endif
 
     // check which is the shortest route to landing an RTL via a DO_LAND_START or continuing on the current mission plan
-    bool is_best_land_sequence(void);
+    bool is_best_land_sequence(const Location &current_loc);
 
     // set in_landing_sequence flag
     void set_in_landing_sequence_flag(bool flag)

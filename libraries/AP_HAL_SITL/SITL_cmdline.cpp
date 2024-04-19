@@ -142,6 +142,7 @@ static const struct {
     { "djix",               MultiCopter::create },
     { "cwx",                MultiCopter::create },
     { "hexa",               MultiCopter::create },
+    { "hexax",              MultiCopter::create },
     { "hexa-cwx",           MultiCopter::create },
     { "hexa-dji",           MultiCopter::create },
     { "octa",               MultiCopter::create },
@@ -622,18 +623,10 @@ void SITL_State::_parse_command_line(int argc, char * const argv[])
         _vehicle = ArduCopter;
     } else if (strcmp(vehicle_str, "Rover") == 0) {
         _vehicle = Rover;
-        // set right default throttle for rover (allowing for reverse)
-        pwm_input[2] = 1500;
     } else if (strcmp(vehicle_str, "ArduSub") == 0) {
         _vehicle = ArduSub;
-        for(uint8_t i = 0; i < 8; i++) {
-            pwm_input[i] = 1500;
-        }
     } else if (strcmp(vehicle_str, "Blimp") == 0) {
         _vehicle = Blimp;
-        for(uint8_t i = 0; i < 8; i++) {
-            pwm_input[i] = 1500;
-        }
     } else {
         _vehicle = ArduPlane;
     }

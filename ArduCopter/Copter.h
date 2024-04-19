@@ -580,8 +580,7 @@ private:
     // Tradheli flags
     typedef struct {
         uint8_t dynamic_flight          : 1;    // 0   // true if we are moving at a significant speed (used to turn on/off leaky I terms)
-        uint8_t in_autorotation         : 1;    // 1   // true when heli is in autorotation
-        bool coll_stk_low                  ;    // 2   // true when collective stick is on lower limit
+        bool coll_stk_low                  ;    // 1   // true when collective stick is on lower limit
     } heli_flags_t;
     heli_flags_t heli_flags;
 
@@ -740,9 +739,8 @@ private:
     // commands.cpp
     void update_home_from_EKF();
     void set_home_to_current_location_inflight();
-    bool set_home_to_current_location(bool lock) WARN_IF_UNUSED;
-    bool set_home(const Location& loc, bool lock) WARN_IF_UNUSED;
-    bool far_from_EKF_origin(const Location& loc);
+    bool set_home_to_current_location(bool lock) override WARN_IF_UNUSED;
+    bool set_home(const Location& loc, bool lock) override WARN_IF_UNUSED;
 
     // compassmot.cpp
     MAV_RESULT mavlink_compassmot(const GCS_MAVLINK &gcs_chan);
