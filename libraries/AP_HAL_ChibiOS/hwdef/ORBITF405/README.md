@@ -46,7 +46,7 @@ The ORBITF405 supports OSD using OSD_TYPE 1 (MAX7456 driver).
 
 ## VTX Support
 
-The JST-GH-6P connector supports a standard DJI HD VTX connection. Pin 1 of the connector is 9v so be careful not to connect this to a peripheral requiring 5V.
+The JST-SH-6P connector supports a DJI Air Unit / HD VTX connection. Pin 1 of the connector is 10V so be careful not to connect this to a peripheral requiring 5V.
 
 ## PWM Output
 
