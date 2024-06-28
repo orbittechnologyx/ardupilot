@@ -6,12 +6,21 @@ The ORBITF405 is a flight controller produced by [ORBIT Technology](http://www.o
 
  - STM32F405 microcontroller
  - ICM42688 IMU
- - DPS310 or SPL06 barometer
+ - DPS310 or SPL06 barometer (I2C)
  - SDCard
- - On board 128Mbit FRAM
+ - 16MB onboard dataflash
+ - Up to 4GB SD Card Slot
  - AT7456E OSD
  - 6 UARTs
  - 9 PWM outputs
+ - Power input: 2s - 6s Lipo (10V output will be lower when 2S is used)
+ - Power output: 3.3V/500mA, 4.5V-5V/3A, 9V/3A
+ - RSSI voltage monitoring
+ - I2C: Used for external magnetometer (GPS module), Barometer module
+ - Hardware Inverter for SBUS/F.BUS input
+ - Mounting Holes: M4 30.5x30.5mm
+ - Dimensions: 38x41mm (W x L)
+ - Weight: 8g
 
 ## Pinout
 TODO
