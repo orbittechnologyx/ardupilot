@@ -127,8 +127,9 @@ PA8 TIM1_CH1 TIM1 PWM(9) GPIO(58) # M9
 define HAL_FRAME_TYPE_DEFAULT 12
 
 # ---------------- LED ----------------
+define AP_NOTIFY_GPIO_LED_1_ENABLED 1
 PC13 LED0 OUTPUT HIGH GPIO(90)
-define HAL_GPIO_A_LED_PIN 90
+define AP_NOTIFY_GPIO_LED_1_PIN 90
 
 # ---------------- Barometer setup ----------------
 define AP_BARO_BACKEND_DEFAULT_ENABLED 0
@@ -138,7 +139,7 @@ BARO SPL06 I2C:0:0x76
 # ---------------- IMU setup ----------------
 SPIDEV imu1   SPI1 DEVID1 GYRO1_CS   MODE3   1*MHZ   8*MHZ
 
-IMU Invensensev3 SPI:imu1 ROTATION_PITCH_180_YAW_270
+IMU Invensensev3 SPI:imu1 ROTATION_PITCH_180_YAW_90
 DMA_NOSHARE TIM3_UP TIM8_UP TIM2_UP SPI1*
 DMA_PRIORITY TIM3_UP TIM8_UP TIM2_UP SPI1*
 
@@ -152,8 +153,8 @@ ROMFS_WILDCARD libraries/AP_OSD/fonts/font*.bin
 # ---------------- FRAM setup ----------------
 SPIDEV ramtron SPI3 DEVID1  FRAM_CS  MODE3   8*MHZ    8*MHZ
 
-# enable RAMTROM parameter storage
-define HAL_WITH_RAMTRON 1
+# enable RAMTRON parameter storage
+define HAL_WITH_RAMTRON 0
 
 # ---------------- SDCard ----------------
 SPIDEV sdcard SPI3 DEVID1 SDCARD_CS  MODE0 400*KHZ 25*MHZ
