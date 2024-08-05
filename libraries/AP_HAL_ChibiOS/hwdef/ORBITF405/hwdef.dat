@@ -151,10 +151,10 @@ define HAL_OSD_TYPE_DEFAULT 1
 ROMFS_WILDCARD libraries/AP_OSD/fonts/font*.bin
 
 # ---------------- FRAM setup ----------------
-SPIDEV ramtron SPI3 DEVID1  FRAM_CS  MODE3   8*MHZ    8*MHZ
+SPIDEV dataflash SPI3 DEVID1  FRAM_CS  MODE3   8*MHZ    8*MHZ
+# enable logging to dataflash
+define HAL_LOGGING_DATAFLASH_ENABLED 1
 
-# enable RAMTRON parameter storage
-define HAL_WITH_RAMTRON 0
 
 # ---------------- SDCard ----------------
 SPIDEV sdcard SPI3 DEVID1 SDCARD_CS  MODE0 400*KHZ 25*MHZ
