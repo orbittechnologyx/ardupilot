@@ -51,6 +51,7 @@ TARGET_HW_ATL_MANTIS_EDU               97
 TARGET_HW_THE_PEACH_K1                212
 TARGET_HW_THE_PEACH_R1                213
 
+TARGET_HW_ORBITH743                   129
 
 Reserved  PX4 [BL] FMU v5X.x           51
 Reserved "PX4 [BL] FMU v6.x"           52
@@ -302,6 +303,8 @@ AP_HW_CBU_StampH743_LC               1182
 AP_HW_NarinH7                        1183
 AP_HW_BrahmaF4                       1184
 AP_HW_X-MAV-AP-F405Mini              1185
+
+AP_HW_ORBITH743                      1190
 
 AP_HW_JFB200                         1200
 
