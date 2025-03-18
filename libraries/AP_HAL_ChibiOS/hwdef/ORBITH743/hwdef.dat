@@ -73,15 +73,15 @@ PC1 BATT_CURRENT_SENS ADC1 SCALE(1)
 PC4 BATT2_VOLTAGE_SENS ADC1 SCALE(1)
 PA4 BATT2_CURRENT_SENS ADC1 SCALE(1)
 
-define HAL_BATT_MONITOR_DEFAULT 4                        # !!!!!!
+define HAL_BATT_MONITOR_DEFAULT 4
 define HAL_BATT_VOLT_PIN 10
 define HAL_BATT_CURR_PIN 11
 define HAL_BATT2_VOLT_PIN 4
 define HAL_BATT2_CURR_PIN 18
 
-define HAL_BATT_VOLT_SCALE 11.0
-define HAL_BATT_CURR_SCALE 40.0
-define HAL_BATT2_VOLT_SCALE 11.0
+define HAL_BATT_VOLT_SCALE 10.1
+define HAL_BATT_CURR_SCALE 12.5
+define HAL_BATT2_VOLT_SCALE 10.1
 
 # ADC for rssi
 PC5 RSSI_ADC ADC1
@@ -89,12 +89,12 @@ define BOARD_RSSI_ANA_PIN 8
 
 # Define LEDs
 # blue LED0 marked as ACT
-# green LED1 marked as B/E
+# red LED1 marked as B/E
 PE3 LED0 OUTPUT LOW GPIO(90) # blue
-PE4 LED1 OUTPUT LOW GPIO(91) # orange
-define AP_NOTIFY_GPIO_LED_2_ENABLED 1                                    # !!!!!!
-define HAL_GPIO_A_LED_PIN 91
-define HAL_GPIO_B_LED_PIN 90
+PE4 LED1 OUTPUT LOW GPIO(91) # red
+define AP_NOTIFY_GPIO_LED_2_ENABLED 1
+define HAL_GPIO_A_LED_PIN 90
+define HAL_GPIO_B_LED_PIN 91
 
 
 # order of UARTs (and USB)
@@ -115,7 +115,7 @@ PD9 USART3_RX USART3
 PD8 USART3_TX USART3
 define DEFAULT_SERIAL3_PROTOCOL SerialProtocol_DJI_FPV
 
-# UART4 (VTX), SERIAL4                                              # !!!!!!
+# UART4 (VTX), SERIAL4
 PD0 UART4_RX UART4
 PD1 UART4_TX UART4
 define DEFAULT_SERIAL4_PROTOCOL SerialProtocol_None
@@ -142,7 +142,7 @@ define DEFAULT_SERIAL4_PROTOCOL SerialProtocol_None
 
 
 # Motors
-PA0  TIM5_CH1 TIM5  PWM(1)  GPIO(50) BIDIR   //M1                  # !!!!!! BIDIR kakute kullanmadı, GPIO() diğerlerinden örnek alındı
+PA0  TIM5_CH1 TIM5  PWM(1)  GPIO(50) BIDIR   //M1                  
 PA1  TIM5_CH2 TIM5  PWM(2)  GPIO(51)         //M2
 PA2  TIM5_CH3 TIM5  PWM(3)  GPIO(52) BIDIR   //M3
 PA3  TIM5_CH4 TIM5  PWM(4)  GPIO(53)         //M4
@@ -160,7 +160,7 @@ PD13  TIM4_CH2 TIM4  PWM(12) GPIO(61) NODMA  //S2
 # LED stripe
 PA8  TIM1_CH1 TIM1  PWM(13) GPIO(62)
 
-# PWM output for buzzer/Beeper                                   # !!!!!! diğerlerinden örnek alındı
+# PWM output for buzzer/Beeper  
 PB7 BUZZER OUTPUT LOW PULLDOWN GPIO(80)
 define HAL_BUZZER_PIN 80
 
@@ -170,23 +170,23 @@ PE2  PINIO1 OUTPUT GPIO(81) HIGH
 # GPIOs for CAMERA Control 
 #PD2  PINIO2 OUTPUT GPIO(82) LOW
 
-# DMA Priority                                        # !!!!!! ?????
+# DMA Priority  
 DMA_PRIORITY S* TIM3* TIM2*
 DMA_NOSHARE SPI1* SPI4* TIM3* TIM2*
 
 # use last 2 pages for flash storage
-# H743 has 16 pages of 128k each                    # !!!!!! diğerlerinden örnek alındı
+# H743 has 16 pages of 128k each 
 STORAGE_FLASH_PAGE 14
 define HAL_STORAGE_SIZE 32768
 
 # spi devices
-SPIDEV icm42688_1    SPI1 DEVID1 IMU1_CS      MODE3  2*MHZ   16*MHZ         # !!!!!! 
+SPIDEV icm42688_1    SPI1 DEVID1 IMU1_CS      MODE3  2*MHZ   16*MHZ    
 SPIDEV icm42688_2    SPI4 DEVID1 IMU2_CS      MODE3  2*MHZ   16*MHZ
 SPIDEV dataflash     SPI3 DEVID1 FLASH_CS     MODE3  104*MHZ 104*MHZ
 SPIDEV osd           SPI2 DEVID4 MAX7456_CS   MODE0  10*MHZ  10*MHZ
 
 
-# two ICM42688 IMU                                                           # !!!!!! KONTROL
+# two ICM42688 IMU                                                          
 IMU Invensensev3 SPI:icm42688_1 ROTATION_ROLL_180_YAW_270
 IMU Invensensev3 SPI:icm42688_2 ROTATION_ROLL_180_YAW_270
 define HAL_DEFAULT_INS_FAST_SAMPLE 1
