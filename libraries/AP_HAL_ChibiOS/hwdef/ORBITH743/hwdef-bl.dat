@@ -22,7 +22,6 @@ STORAGE_FLASH_PAGE 14
 # the H743 has 128k sectors
 FLASH_BOOTLOADER_LOAD_KB 128
 
-
 # order of UARTs (and USB). Allow bootloading on USB and telem1
 SERIAL_ORDER OTG1
 
